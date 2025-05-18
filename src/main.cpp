@@ -20,7 +20,8 @@ DHT dht(DHTPIN, DHTTYPE);
 uint32_t previousReadMillis = 0;
 
 
-void setup() {
+void setup()
+{
     Serial.begin(9600);
     dht.begin();
 
@@ -40,7 +41,8 @@ void setup() {
 }
 
 
-void loop() {
+void loop()
+{
     uint32_t currentMillis = millis();
 
     if (currentMillis - previousReadMillis >= readInterval)
