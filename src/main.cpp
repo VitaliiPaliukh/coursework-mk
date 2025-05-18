@@ -80,11 +80,11 @@ void loop()
         display.setTextColor(SSD1306_WHITE);
         display.setCursor(0, 0);
         display.println("DHT11 Data:");
-        display.print("Temp: ");
+        display.print("Temperature: ");
         display.print(temperature);
         display.println(" C");
 
-        display.print("Hum:  ");
+        display.print("Humidity:  ");
         display.print(humidity);
         display.println(" %");
 
