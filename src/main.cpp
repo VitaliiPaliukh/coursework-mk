@@ -13,6 +13,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 #define DHTPIN 14
 #define DHTTYPE DHT11
+#define RELAYPIN 13
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -22,6 +23,8 @@ uint32_t previousReadMillis = 0;
 
 void setup()
 {
+    pinMode(RELAYPIN, OUTPUT);
+    digitalWrite(RELAYPIN, HIGH);
     Serial.begin(9600);
     dht.begin();
 
@@ -65,6 +68,13 @@ void loop()
 
             delay(2000);
             return;
+        }
+
+        if (humidity < 80.0) {
+            digitalWrite(RELAYPIN, HIGH);
+        }
+        else {
+            digitalWrite(RELAYPIN,LOW);
         }
 
         Serial.print("Humidity: ");
