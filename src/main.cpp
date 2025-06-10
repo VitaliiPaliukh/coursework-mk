@@ -77,66 +77,77 @@ void wifiSetup() {
     }
 }
 
-void loop()
-{
+void displayInit() {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println(F("DHT11 Monitor"));
+    display.display();
+    delay(2000);
+}
+
+void displaySensorError() {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.println("Sensor error!");
+    display.display();
+    delay(2000);
+}
+
+void displaySensorData(float temperature, float humidity, float targetHumidity) {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("DHT11 Data:");
+    display.print("targetHumidity: ");
+    display.print(targetHumidity);
+    display.print("Temperature: ");
+    display.print(temperature);
+    display.println(" C");
+    display.print("Humidity:  ");
+    display.print(humidity);
+    display.println(" %");
+    display.display();
+}
+
+void controlRelay(float humidity, float targetHumidity) {
+    if (humidity < targetHumidity) {
+        digitalWrite(RELAYPIN, HIGH);
+    } else {
+        digitalWrite(RELAYPIN, LOW);
+    }
+}
+
+void readSensors(float &temperature, float &humidity) {
+    humidity = dht.readHumidity();
+    temperature = dht.readTemperature();
+}
+
+
+void loop() {
     uint32_t currentMillis = millis();
 
-    if (currentMillis - previousReadMillis >= readInterval)
-        {
+    if (currentMillis - previousReadMillis >= readInterval) {
         previousReadMillis = currentMillis;
 
-        float humidity = dht.readHumidity();
-        float temperature = dht.readTemperature();
-
+        float temperature, humidity;
+        readSensors(temperature, humidity);
 
         if (isnan(humidity) || isnan(temperature)) {
+            displaySensorError();
             Serial.println("ERROR reading DHT11!");
-
-            display.clearDisplay();
-            display.setCursor(0, 0);
-            display.setTextSize(1);
-            display.setTextColor(SSD1306_WHITE);
-            display.println("Sensor error!");
-            display.display();
-
             delay(2000);
             return;
         }
+
         float targetHumidity = getTargetHumidity();
-        if (humidity < targetHumidity) {
-            digitalWrite(RELAYPIN, HIGH);
-        }
-        else {
-            digitalWrite(RELAYPIN,LOW);
-        }
-        Serial.print("targetHumidity: ");
-        Serial.print(targetHumidity);
-        Serial.print("Humidity: ");
-        Serial.print(humidity);
-        Serial.print(" %\t");
-
-        Serial.print("Temperature: ");
-        Serial.print(temperature);
-        Serial.println(" *C");
-
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.println("DHT11 Data:");
-        display.print("targetHumidity: ");
-        display.print(targetHumidity);
-        display.print("Temperature: ");
-        display.print(temperature);
-        display.println(" C");
-
-        display.print("Humidity:  ");
-        display.print(humidity);
-        display.println(" %");
-
-        display.display();
+        controlRelay(humidity, targetHumidity);
+        displaySensorData(temperature, humidity, targetHumidity);
         sendToBackend(temperature, humidity);
-        getTargetHumidity();
     }
 }
 

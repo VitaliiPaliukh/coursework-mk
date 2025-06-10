@@ -23,11 +23,6 @@
   <component name="ChangeListManager">
     <list default="true" id="90f43064-d5cf-43f2-8ae4-3c527befbde3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.pio/build/esp_wroom_02/.sconsign311.dblite" beforeDir="false" afterPath="$PROJECT_DIR$/.pio/build/esp_wroom_02/.sconsign311.dblite" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.pio/build/esp_wroom_02/idedata.json" beforeDir="false" afterPath="$PROJECT_DIR$/.pio/build/esp_wroom_02/idedata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.pio/build/project.checksum" beforeDir="false" afterPath="$PROJECT_DIR$/.pio/build/project.checksum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.pio/libdeps/esp_wroom_02/integrity.dat" beforeDir="false" afterPath="$PROJECT_DIR$/.pio/libdeps/esp_wroom_02/integrity.dat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platformio.ini" beforeDir="false" afterPath="$PROJECT_DIR$/platformio.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -195,7 +190,7 @@
       <workItem from="1749490923006" duration="108000" />
       <workItem from="1749491908339" duration="537000" />
       <workItem from="1749493034619" duration="383000" />
-      <workItem from="1749549966768" duration="1508000" />
+      <workItem from="1749549966768" duration="5254000" />
     </task>
     <servers />
   </component>
