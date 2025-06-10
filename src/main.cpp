@@ -3,6 +3,11 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
+#define SSID "TP-LINK_4408"
+#define PASSWORD "26470467"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -20,9 +25,14 @@ DHT dht(DHTPIN, DHTTYPE);
 #define readInterval 2000
 uint32_t previousReadMillis = 0;
 
+void sendToBackend(float temperature, float humidity);
+void wifiSetup();
+void getCurrentCondition();
+float getTargetHumidity();
 
 void setup()
 {
+    wifiSetup();
     pinMode(RELAYPIN, OUTPUT);
     digitalWrite(RELAYPIN, HIGH);
     Serial.begin(9600);
@@ -43,6 +53,29 @@ void setup()
     delay(2000);
 }
 
+void wifiSetup() {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(SSID, PASSWORD);
+
+    uint32_t startAttemptTime = millis();
+    uint32_t checkInterval = 500;
+    uint32_t lastCheckTime = 0;
+
+    while (WiFi.status() != WL_CONNECTED && (millis() - startAttemptTime < 15000)) {
+        if (millis() - lastCheckTime >= checkInterval) {
+            lastCheckTime = millis();
+            Serial.println("Connecting to Wi-Fi...");
+        }
+        yield();
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.print("IP ESP8266: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println("cant connect to wifi.");
+    }
+}
 
 void loop()
 {
@@ -69,14 +102,15 @@ void loop()
             delay(2000);
             return;
         }
-
-        if (humidity < 80.0) {
+        float targetHumidity = getTargetHumidity();
+        if (humidity < targetHumidity) {
             digitalWrite(RELAYPIN, HIGH);
         }
         else {
             digitalWrite(RELAYPIN,LOW);
         }
-
+        Serial.print("targetHumidity: ");
+        Serial.print(targetHumidity);
         Serial.print("Humidity: ");
         Serial.print(humidity);
         Serial.print(" %\t");
@@ -90,6 +124,8 @@ void loop()
         display.setTextColor(SSD1306_WHITE);
         display.setCursor(0, 0);
         display.println("DHT11 Data:");
+        display.print("targetHumidity: ");
+        display.print(targetHumidity);
         display.print("Temperature: ");
         display.print(temperature);
         display.println(" C");
@@ -99,5 +135,69 @@ void loop()
         display.println(" %");
 
         display.display();
+        sendToBackend(temperature, humidity);
+        getTargetHumidity();
     }
 }
+
+void sendToBackend(float temperature, float humidity) {
+    if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        WiFiClient client;
+
+        http.begin(client, "http://192.168.0.100:8000/api/v1/keypress/");
+        http.addHeader("Content-Type", "application/json");
+
+        String json = "{\"device_name\":\"ESP8266-DHT11\","
+                      "\"temperature\":" + String(temperature, 1) +
+                      ",\"humidity\":" + String(humidity, 1) + "}";
+
+        int httpResponseCode = http.POST(json);
+
+        if (httpResponseCode > 0) {
+            Serial.println("Data sent! Code: " + String(httpResponseCode));
+            Serial.println("Response: " + http.getString());
+        } else {
+            Serial.println("Failed to send data. Code: " + String(httpResponseCode));
+        }
+
+        http.end();
+    } else {
+        Serial.println("WiFi not connected.");
+    }
+}
+
+float getTargetHumidity() {
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClient client;
+        HTTPClient http;
+        http.begin(client, "http://192.168.0.100:8000/api/v1/target_humidity");
+
+        int httpCode = http.GET();
+
+        if (httpCode == 200) {
+            String payload = http.getString();
+            Serial.println("Response:");
+            Serial.println(payload);
+
+            int index = payload.indexOf("target_humidity");
+            if (index != -1) {
+                int colon = payload.indexOf(":", index);
+                int comma = payload.indexOf(",", colon);
+                if (comma == -1) comma = payload.indexOf("}", colon);
+                String value = payload.substring(colon + 1, comma);
+                return value.toFloat();
+            }
+        } else {
+            Serial.print("GET failed, error: ");
+            Serial.println(httpCode);
+        }
+
+        http.end();
+    } else {
+        Serial.println("WiFi not connected");
+    }
+
+    return -1.0;
+}
+
